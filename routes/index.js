@@ -2,7 +2,11 @@ const express = require('express');
 const router = express.Router();
 const knex = require('../db/knex');
 
+
 router.get('/', function (req, res, next) {
+  const userId = req.session.userid;
+  const isAuth = Boolean(userId);
+  console.log(`isAuth: ${isAuth}`);
   knex("tasks")
     .select("*")
     .then(function (results) {
@@ -29,11 +33,31 @@ router.post('/', function (req, res, next) {
     .where({name: username})
     .select("*")
     .then(function (result) {
+      
       if (result.length !== 0) {
         res.render("signup", {
           title: "Sign up",
           errorMessage: ["このユーザ名は既に使われています"],
-        })
+        }) 
+      } else if (password === repassword) {
+        
+        knex("users")
+          .insert({name: username, password: password})
+          .then(function () {
+            res.redirect("/");
+          })
+          .catch(function (err) {
+            console.error(err);
+            res.render("signup", {
+              title: "Sign up",
+              errorMessage: [err.sqlMessage],
+            });
+          });
+      } else {
+        res.render("signup", {
+          title: "Sign up",
+          errorMessage: ["パスワードが一致しません"],
+        });
       }
     })
     .catch(function (err) {
@@ -46,5 +70,7 @@ router.post('/', function (req, res, next) {
 });
 
 router.use('/signup', require('./signup'));
+router.use('/signin', require('./signin'));
+router.use('/logout', require('./logout'));
 
 module.exports = router;

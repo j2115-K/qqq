@@ -16,6 +16,7 @@ router.post('/', function (req, res, next) {
     .where({name: username})
     .select("*")
     .then(function (result) {
+      console.log(result);
       if (result.length !== 0) {
         res.render("signup", {
           title: "Sign up",
